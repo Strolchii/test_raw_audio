@@ -6,4 +6,5 @@
 
 mkdir -p data/raw_audio
 cd data/raw_audio
-tail -n +2 ../metadata.csv | cut -d',' -f 1 | head | parallel -j8 ia download {} --glob="*.mp3"
+tail -n +2 /home/robin/Coding/test_raw_sound/SoundingEarth/data/metadata.csv | cut -d',' -f 1 | parallel -j8 ia download {} --glob="*.mp3"
+

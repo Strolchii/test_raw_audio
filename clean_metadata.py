@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from geopy.geocoders import Nominatim
 from geopy.point import Point
-from cleantext import clean
+from cleantext import clean     #pip install clean-text (cleantext is a different package)
 import os
 # from wordsegment import load, segment
 # import nltk
@@ -77,21 +77,32 @@ def get_caption(i, lat, lon, title, description):
 def get_detailed_metadata(data_path):
     meta_df = pd.read_csv(os.path.join(cfg.data_path,'metadata.csv'))
     print("Original data",len(meta_df))
-    corrupt_ids = list(pd.read_csv(os.path.join(cfg.data_path,"corrupt_ids_final.csv"))['long_key']) #Ignore some IDs whose mp3 is found to be corrupt
-    meta_df = meta_df[~meta_df['long_key'].isin(corrupt_ids)]
-    print("data removing corrupt mp3",len(meta_df))
+    corrupt_ids = list(pd.read_csv(os.path.join(cfg.data_path,"corrupt_ids_final.csv"))['key']) #Ignore some IDs whose mp3 is found to be corrupt
+    meta_df = meta_df[~meta_df['key'].isin(corrupt_ids)]
+    print("count of mp3 after removing corrupt mp3",len(meta_df))
+
+    #New: Saving ids of audio files < 16000
+    meta_df_low_sr = meta_df[meta_df['mp3samplerate'] < 16000]
+    print("data removing mp3 sampled by sr less than 16k", len(meta_df_low_sr))
+
+    audio_low_sr_ids = meta_df_low_sr['key'].tolist()
+    low_sr_ids_df = pd.DataFrame(audio_low_sr_ids, columns=['key'])
+    low_sr_ids_df.to_csv(os.path.join(cfg.data_path, 'sr_less_16k_ids_final.csv'))
 
     #keep only the data with audio fs >= 16000
     meta_df = meta_df[meta_df['mp3samplerate']>=16000]
-    print("data removing mp3 sampled by sr less than 16k",len(meta_df))
+    print("count of mp3 after removing mp3 sampled by sr less than 16k",len(meta_df))
     audio_short_ids = list(meta_df.key)
 
     image_ids = os.listdir(cfg.sat_image_path)
     image_short_ids = [i.split('.jpg')[0] for i in image_ids]
-    print("Total count of sat image samples in original dataset") 
-    print(len(image_short_ids))
-    meta_df.to_csv(os.path.join(cfg.data_path,"final_metadata.csv"))
+    print("TOTAL COUNT of sat image samples in original dataset", len(image_short_ids)) 
+
     metadata = meta_df.fillna(np.nan)
+    
+    # only for debug use
+    metadata = metadata.head(200)
+
     keys = list(metadata.key)
     lats = list(metadata.latitude)
     longs = list(metadata.longitude)
@@ -100,12 +111,31 @@ def get_detailed_metadata(data_path):
 
     captions = [get_caption(i, lats[i], longs[i], titles[i], descriptions[i]) for i in range(len(metadata))]
     metadata['caption'] = captions
-    address = ["The location of the sound is" + caption.split("location of the sound is")[1] for caption in captions]
+
+    # Identifying entries with missing address details
+    no_address_ids = []
+    address = []
+    for i, caption in enumerate(captions):
+        if "location of the sound is" in caption:
+            address.append("The location of the sound is" + caption.split("location of the sound is")[1])
+        else:
+            no_address_ids.append(keys[i])
+            address.append("Address not specified")
     metadata['address'] = address
-    metadata.to_csv(os.path.join(data_path,'final_metadata_with_captions.csv'))
 
-    print("description of metadata cleaned")
+    no_address_ids_df = pd.DataFrame(no_address_ids, columns=['key'])
+    no_address_ids_df.to_csv(os.path.join(cfg.data_path, 'no_address_ids_final.csv'))
+    print("data removing mp3 with no reversed geocode",len(no_address_ids_df))
 
-    return metadata
+    # Save final metadata before adding captions, excluding samples without addresses
+    valid_metadata = metadata[~metadata['key'].isin(no_address_ids)]
+    valid_metadata.to_csv(os.path.join(cfg.data_path, 'final_metadata.csv'))
+    print("TOTAL COUNT of valid sounds in dataset", len(valid_metadata)) 
+
+    # Save metadata with captions, excluding samples without addresses
+    valid_metadata.to_csv(os.path.join(cfg.data_path, 'final_metadata_with_captions.csv'))
+
+    print("Description of metadata cleaned")
+    return valid_metadata
 
 get_detailed_metadata(cfg.data_path)

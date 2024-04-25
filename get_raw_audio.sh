@@ -4,5 +4,7 @@
 # For the second one, check https://archive.org/services/docs/api/internetarchive/installation.html
 # Or simply run `pip install internetarchive`
 
-pwd
-./SoundingEarth/get_raw_audio.sh
+mkdir -p data/raw_audio
+cd data/raw_audio
+tail -n +2 /Coding/test_raw_sound/metadata.csv | cut -d',' -f 1 | parallel -j8 ia download {} --glob="*.mp3"
+

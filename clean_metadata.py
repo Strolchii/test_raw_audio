@@ -101,7 +101,7 @@ def get_detailed_metadata(data_path):
     metadata = meta_df.fillna(np.nan)
     
     # only for debug use
-    metadata = metadata.head(200)
+    # metadata = metadata.head(200)
 
     keys = list(metadata.key)
     lats = list(metadata.latitude)
@@ -120,15 +120,17 @@ def get_detailed_metadata(data_path):
             address.append("The location of the sound is" + caption.split("location of the sound is")[1])
         else:
             no_address_ids.append(keys[i])
-            address.append("Address not specified")
+            address.append("") # Add empty adress field
     metadata['address'] = address
 
     no_address_ids_df = pd.DataFrame(no_address_ids, columns=['key'])
     no_address_ids_df.to_csv(os.path.join(cfg.data_path, 'no_address_ids_final.csv'))
-    print("data removing mp3 with no reversed geocode",len(no_address_ids_df))
+    print("count of mp3 with no reversed geocode",len(no_address_ids_df)) # dont remove these !!!!
 
     # Save final metadata before adding captions, excluding samples without addresses
-    valid_metadata = metadata[~metadata['key'].isin(no_address_ids)]
+    # valid_metadata = metadata[~metadata['key'].isin(no_address_ids)]   # <- deactivated to use all samples, that means dont remove the samples without address information
+    valid_metadata = metadata
+
     valid_metadata.to_csv(os.path.join(cfg.data_path, 'final_metadata.csv'))
     print("TOTAL COUNT of valid sounds in dataset", len(valid_metadata)) 
 

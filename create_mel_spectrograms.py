@@ -2,13 +2,12 @@ import os
 import librosa
 import numpy as np
 import pandas as pd
-import concurrent.futures
 from config import cfg
 
 ########## Define parameters ######################
 mel_bins = 128
-# 16 kHz for speech, 22.05 kHz as a compromise, 44.1 kHz for ambient sounds, None to keep the original sampling rate
-sr_kHz = 22.05 
+# 16 kHz for speech, 22.05 kHz as a compromise, 44.1/48 kHz for ambient sounds, None to keep the original sampling rate
+sr_kHz = 48 # 48kHz (to compare results with geoclap) 
 sr = sr_kHz * 1e3
 
 output_folder = os.path.join(cfg.sat_audio_spectrograms_path, f"{mel_bins}mel_{sr_kHz}kHz")
@@ -23,6 +22,7 @@ df = pd.read_csv(metadata_path)
 total_mel_size = 0
 processed_files_size = 0
 processed_files_count = 0
+files_5GB_counter = 0
 total_files_size = df['mp3mb'].sum() / 1024  # Convert from MB to GB
 
 # Iterate through each row of metadata
@@ -32,7 +32,7 @@ for idx, row in df.iterrows():
     
     # Load MP3 and calculate Mel spectrogram
     audio, sr_audio = librosa.load(mp3_path, sr=sr)  # sr=None to keep the original sampling rate
-    S = librosa.feature.melspectrogram(audio, sr=sr_audio, n_mels=mel_bins)
+    S = librosa.feature.melspectrogram(y=audio, sr=sr_audio, n_mels=mel_bins)
     
     # Save the Mel spectrogram as a NumPy array
     np.save(output_path, S)
@@ -42,13 +42,14 @@ for idx, row in df.iterrows():
     file_size_gb = os.path.getsize(mp3_path) / (1024 ** 3)  # Size in GB
     total_mel_size += mel_size
     processed_files_size += file_size_gb
+    files_5GB_counter += file_size_gb
     processed_files_count += 1
     
     # Print status every 5GB of processed audio data
-    if processed_files_size >= 5:
+    if files_5GB_counter >= 5:
         print(f"Processed {processed_files_size:.2f} GB of {total_files_size:.2f} GB audio files ({processed_files_count} files)")
         print(f"Total data size of saved arrays so far: {total_mel_size:.2f} GB")
-        processed_files_size = 0  # Reset after each output
+        files_5GB_counter = 0  # Reset after each output
 
 # Final output
 print("Processing completed.")

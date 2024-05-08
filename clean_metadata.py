@@ -134,9 +134,6 @@ def get_detailed_metadata(data_path):
     valid_metadata.to_csv(os.path.join(cfg.data_path, 'final_metadata.csv'))
     print("TOTAL COUNT of valid sounds in dataset", len(valid_metadata)) 
 
-    # Save metadata with captions, excluding samples without addresses
-    valid_metadata.to_csv(os.path.join(cfg.data_path, 'final_metadata_with_captions.csv'))
-
     print("Description of metadata cleaned")
     return valid_metadata
 

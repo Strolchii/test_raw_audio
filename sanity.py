@@ -6,9 +6,10 @@ import torchaudio
 import warnings
 from tqdm import tqdm
 import torch
+import tempfile
 warnings.filterwarnings('ignore')
 
-data_path = "/Coding/Sample4Geo/data/SoundingEarth/data"
+data_path = "data"
 
 def get_audio_paths(metadata_path): 
     df = pd.read_csv(metadata_path)
@@ -21,8 +22,10 @@ def check_file(audio_path):
         audio_path = os.path.join(data_path,"raw_audio", audio_path)
         wav, _ = torchaudio.load(audio_path)
         aporee_id = str(audio_path.split('/')[-2])
-        torch.save(wav,os.path.join(data_path,'raw_audio_tensors',aporee_id+'.pt'))
-        #print("Passed for:",audio_path)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_file_path = os.path.join(temp_dir, aporee_id + '.pt')
+            torch.save(wav, temp_file_path)        
+            #print("Passed for:",audio_path)
     except:
         failed_paths.append(audio_path)
         print("Failed for:",audio_path)

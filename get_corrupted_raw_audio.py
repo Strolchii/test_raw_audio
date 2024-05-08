@@ -1,25 +1,25 @@
 import pandas as pd
 import os
 
-# Pfade zu den CSV-Dateien
-corrupt_ids_path = 'data/SoundingEarth/data/corrupt_ids_final.csv'
-metadata_path = 'data/SoundingEarth/data/metadata.csv'
+# Paths to the CSV files
+corrupt_ids_path = 'data/corrupt_ids_final.csv'
+metadata_path = 'data/metadata.csv'
 
-# CSVs einlesen
+# Reading CSVs
 corrupt_ids = pd.read_csv(corrupt_ids_path)
 metadata = pd.read_csv(metadata_path)
 
-# Nur die Einträge aus 'metadata' behalten, die in 'corrupt_ids' vorhanden sind
+# Keep only the entries from 'metadata' that are present in 'corrupt_ids'
 corrupted_metadata = metadata[metadata['key'].isin(corrupt_ids['key'])]
 
-# Verzeichnis für die Downloads erstellen
-os.makedirs('data/SoundingEarth/data/raw_audio_cor_reload', exist_ok=True)
+# Create a directory for the downloads
+os.makedirs('data/raw_audio_cor_reload', exist_ok=True)
 
-# In das Verzeichnis wechseln
-os.chdir('data/SoundingEarth/data/raw_audio_cor_reload')
+# Change to the directory
+os.chdir('data/raw_audio_cor_reload')
 
-# Download-Befehl für jedes korrupte Audio vorbereiten
+# Prepare the download command for each corrupted audio
 for key in corrupted_metadata['key']:
-    # Hier wird das Internet Archive Utility (ia) zum Download verwendet
-    # Dieses Skript setzt voraus, dass `ia` installiert und konfiguriert ist
+    # Here the Internet Archive Utility (ia) is used for downloading
+    # This script assumes that `ia` is installed and configured
     os.system(f'/usr/bin/bash -c "ia download {key} --glob=\'*.mp3\'"')

@@ -10,12 +10,12 @@ mel_bins = 128
 sr_kHz = 48 # 48kHz (to compare results with geoclap) 
 sr = sr_kHz * 1e3
 
-output_folder = os.path.join(cfg.sat_audio_spectrograms_path, f"{mel_bins}mel_{sr_kHz}kHz")
+output_folder = os.path.join(cfg.sat_audio_spectrograms_path, f"new_{mel_bins}mel_{sr_kHz}kHz")
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
 # Read metadata
-metadata_path = os.path.join(cfg.data_path, 'final_metadata_with_captions.csv')
+metadata_path = os.path.join(cfg.data_path, 'final_metadata.csv')
 df = pd.read_csv(metadata_path)
 
 # Initialize calculation of total size of Mel spectrograms and total processed size
@@ -25,6 +25,9 @@ processed_files_count = 0
 files_5GB_counter = 0
 total_files_size = df['mp3mb'].sum() / 1024  # Convert from MB to GB
 
+# Initialize list to store rows with non-NULL data
+valid_rows = []
+
 # Iterate through each row of metadata
 for idx, row in df.iterrows():
     mp3_path = os.path.join(cfg.sat_audio_path, row['key'], row['mp3name'])
@@ -33,10 +36,11 @@ for idx, row in df.iterrows():
     # Load MP3 and calculate Mel spectrogram
     audio, sr_audio = librosa.load(mp3_path, sr=sr)  # sr=None to keep the original sampling rate
     S = librosa.feature.melspectrogram(y=audio, sr=sr_audio, n_mels=mel_bins)
+    S_dB = librosa.power_to_db(S, ref=np.max)
     
     # Save the Mel spectrogram as a NumPy array
-    np.save(output_path, S)
-    
+    np.save(output_path, S_dB)
+
     # Update statistics
     mel_size = os.path.getsize(output_path) / (1024 ** 3)  # Size in GB
     file_size_gb = os.path.getsize(mp3_path) / (1024 ** 3)  # Size in GB

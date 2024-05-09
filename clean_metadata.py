@@ -122,6 +122,7 @@ def get_detailed_metadata(data_path):
             no_address_ids.append(keys[i])
             address.append("") # Add empty adress field
     metadata['address'] = address
+    metadata.reset_index(drop=True, inplace=True)
 
     no_address_ids_df = pd.DataFrame(no_address_ids, columns=['key'])
     no_address_ids_df.to_csv(os.path.join(cfg.data_path, 'no_address_ids_final.csv'))
@@ -130,6 +131,7 @@ def get_detailed_metadata(data_path):
     # Save final metadata before adding captions, excluding samples without addresses
     # valid_metadata = metadata[~metadata['key'].isin(no_address_ids)]   # <- deactivated to use all samples, that means dont remove the samples without address information
     valid_metadata = metadata
+    valid_metadata.reset_index(drop=True, inplace=True)
 
     valid_metadata.to_csv(os.path.join(cfg.data_path, 'final_metadata.csv'))
     print("TOTAL COUNT of valid sounds in dataset", len(valid_metadata)) 

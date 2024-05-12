@@ -10,7 +10,7 @@ import datetime
 ########## Define parameters ######################
 mel_bins = 128
 # 16 kHz for speech, 22.05 kHz as a compromise, 44.1/48 kHz for ambient sounds, None to keep the original sampling rate
-sr_kHz = 48 # 48kHz (to compare results with geoclap) 
+sr_kHz = 44.1 #22.05 # 48kHz (to compare results with geoclap) 
 sr = sr_kHz * 1e3
 
 logfile = 'data/create_spectrogramm.log'
@@ -79,7 +79,7 @@ for idx, row in df.iterrows():
 
     # Update statistics
     mel_size = os.path.getsize(output_path) / (1024 ** 3)  # Size in GB
-    file_size_gb = os.path.getsize(mp3_path) / (1024 ** 3)  # Size in GB
+    file_size_gb = row['mp3mb'] / 1024  # Size in GB
     total_mel_size += mel_size
     processed_files_size += file_size_gb
     files_5GB_counter += file_size_gb

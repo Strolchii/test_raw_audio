@@ -8,9 +8,9 @@ import datetime
 
 ########################################################################################################################
 ########## Define parameters ######################
-mel_bins = 128
+mel_bins = 160
 # 16 kHz for speech, 22.05 kHz as a compromise, 44.1/48 kHz for ambient sounds, None to keep the original sampling rate
-sr_kHz = 44.1 #22.05 # 48kHz (to compare results with geoclap) 
+sr_kHz = 48 #22.05 # 48kHz (to compare results with geoclap) 
 sr = sr_kHz * 1e3
 
 logfile = 'data/create_spectrogramm.log'
@@ -23,7 +23,7 @@ def simple_logprint(msg):
     with open(logfile, 'a') as file:
         file.write(msg + "\n")
 
-def stereo_to_mono_intelligent(audio, key, logfile):
+def stereo_to_mono_intelligent(audio, key):
     # Early return for mono audio to avoid unnecessary processing
     if audio.ndim == 1:
         return audio
